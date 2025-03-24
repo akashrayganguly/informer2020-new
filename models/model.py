@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from utils.masking import TriangularCausalMask, ProbMask
 from models.encoder import Encoder, EncoderLayer, ConvLayer, EncoderStack
 from models.decoder import Decoder, DecoderLayer
-from models.attn import FullAttention, ProbAttention, AttentionLayer
+from models.attn import FullAttention, FullAttention, AttentionLayer
 from models.embed import DataEmbedding
 
 class Informer(nn.Module):
@@ -23,7 +23,7 @@ class Informer(nn.Module):
         self.enc_embedding = DataEmbedding(enc_in, d_model, embed, freq, dropout)
         self.dec_embedding = DataEmbedding(dec_in, d_model, embed, freq, dropout)
         # Attention
-        Attn = ProbAttention if attn=='prob' else FullAttention
+        Attn = FullAttention if attn=='prob' else FullAttention
         # Encoder
         self.encoder = Encoder(
             [
@@ -96,7 +96,7 @@ class InformerStack(nn.Module):
         self.enc_embedding = DataEmbedding(enc_in, d_model, embed, freq, dropout)
         self.dec_embedding = DataEmbedding(dec_in, d_model, embed, freq, dropout)
         # Attention
-        Attn = ProbAttention if attn=='prob' else FullAttention
+        Attn = FullAttention if attn=='prob' else FullAttention
         # Encoder
 
         inp_lens = list(range(len(e_layers))) # [0,1,2,...] you can customize here
