@@ -23,6 +23,34 @@ class PositionalEmbedding(nn.Module):
     def forward(self, x):
         return self.pe[:, :x.size(1)]
 
+class ChannelPositionalEmbedding(nn.Module):
+    """
+    Generates a sinusoidal channel positional encoding.
+    It creates a (c_in, ma+1) matrix (with ma=8), flattens it to (1, c_in*(ma+1)),
+    and repeats it n times to yield a (n, c_in*(ma+1)) tensor.
+    """
+    def __init__(self, c_in, m=24):
+        super(ChannelPositionalEmbedding, self).__init__()
+        self.c_in = c_in
+        self.m = int(m)  #produces (m+1) columns per channel.
+        pe = torch.zeros(c_in, self.m + 1).float()
+        pe.requires_grad = False  # fixed encoding
+        position = torch.arange(0, c_in).float().unsqueeze(1)  # shape: (c_in, 1)
+        div_term = torch.exp(torch.arange(0, self.m + 1, 2).float() * -(math.log(10000.0) / (self.m + 1)))
+        pe[:, 0::2] = torch.sin(position * div_term[: pe[:, 0::2].size(1)])
+        if (self.m + 1) > 1:
+            pe[:, 1::2] = torch.cos(position * div_term[: pe[:, 1::2].size(1)])
+        self.register_buffer('pe', pe)
+
+    def forward(self, n):
+        # Flatten to (1, c_in*(ma+1)) then repeat n times.
+        flat = self.pe.flatten().unsqueeze(0)
+        return flat.repeat(n, 1)
+
+
+
+
+
 class TokenEmbedding(nn.Module):
     def __init__(self, c_in, d_model):
         super(TokenEmbedding, self).__init__()
